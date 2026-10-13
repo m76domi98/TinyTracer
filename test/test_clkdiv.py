@@ -91,3 +91,13 @@ async def test_clkdiv_basic_115200(dut):
     dut._log.info("✓ All 2000 cycles match reference model")
 
 
+@cocotb.test()
+async def test_clkdiv_basic_230400(dut):
+    # 2000 cycles at the 230,400 baud settings, checked against the model.
+    dut._log.info("230,400 baud (b=43, c=-18)")
+
+    await start_clkdiv(dut, B_230400, C_230400)
+    await check_against_ref(dut, ClkdivRef(B_230400, C_230400), 2000)
+    dut._log.info("✓ All 2000 cycles match reference model")
+
+
