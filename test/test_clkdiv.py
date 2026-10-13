@@ -168,3 +168,19 @@ async def test_clkdiv_parameter_change(dut):
     dut._log.info("✓ Second 1000 cycles verified with (43, -18)")
 
 
+@cocotb.test()
+async def test_clkdiv_edge_case_b_equals_neg_c(dut):
+    # b = -c gives a divide by 4.
+    dut._log.info("Edge case: b = -c")
+
+    await start_clkdiv(dut, 18, -18 & 0xFF)
+    await check_against_ref(dut, ClkdivRef(18, -18 & 0xFF), 1000)
+
+    measured_ratio = await measure_ratio(dut, 1000)
+    expected_ratio = 1.0 / 4  # 6.25 MHz / 25 MHz
+
+    dut._log.info(f"Measured ratio: {measured_ratio:.6f}, Expected: {expected_ratio:.6f}")
+    assert abs(measured_ratio - expected_ratio) < 0.01, "Ratio mismatch for b=-c case"
+    dut._log.info("✓ Edge case b = -c verified")
+
+
