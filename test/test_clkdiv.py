@@ -184,3 +184,13 @@ async def test_clkdiv_edge_case_b_equals_neg_c(dut):
     dut._log.info("✓ Edge case b = -c verified")
 
 
+@cocotb.test()
+async def test_clkdiv_slowest_legal(dut):
+    # b=126, c=-1 is the slowest legal setting (b - c = 127, the max).
+    dut._log.info("Slowest legal: b=126, c=-1")
+
+    await start_clkdiv(dut, 126, -1 & 0xFF)
+    await check_against_ref(dut, ClkdivRef(126, -1 & 0xFF), 5000)
+    dut._log.info("✓ Slowest legal setting verified")
+
+
