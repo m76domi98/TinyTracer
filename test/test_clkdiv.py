@@ -286,3 +286,11 @@ async def test_clkdiv_reset_accumulator(dut):
     dut._log.info("✓ Reset behavior OK")
 
 
+@cocotb.test()
+async def test_clkdiv_long_term(dut):
+    # 50k cycles, to catch anything that only shows up after a while.
+    dut._log.info("Long-term stability check")
+
+    await start_clkdiv(dut, B_115200, C_115200)
+    await check_against_ref(dut, ClkdivRef(B_115200, C_115200), 50_000)
+    dut._log.info("✓ Stable over 50k cycles")
