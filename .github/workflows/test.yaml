@@ -15,9 +15,14 @@ jobs:
         with:
           python-version: '3.11'
 
+      # Install cocotb into a venv. cocotb only exports PYTHONHOME when it is
+      # not in a venv, and that breaks Verilator's build, which runs /usr/bin/python3.
       - name: Install Python packages
         shell: bash
-        run: pip install -r test/requirements.txt
+        run: |
+          python -m venv "$HOME/cocotb-venv"
+          "$HOME/cocotb-venv/bin/pip" install -r test/requirements.txt
+          echo "$HOME/cocotb-venv/bin" >> "$GITHUB_PATH"
 
       # Verilator for the RTL test (Icarus does not support the SystemVerilog
       # interfaces in src), Icarus for the gate-level test. cocotb 1.9 needs
