@@ -81,3 +81,13 @@ async def test_clkdiv_reset(dut):
     await ClockCycles(dut.clk, 1)
 
 
+@cocotb.test()
+async def test_clkdiv_basic_115200(dut):
+    # 2000 cycles at the 115,200 baud settings, checked against the model.
+    dut._log.info("115,200 baud (b=104, c=-18)")
+
+    await start_clkdiv(dut, B_115200, C_115200)
+    await check_against_ref(dut, ClkdivRef(B_115200, C_115200), 2000)
+    dut._log.info("✓ All 2000 cycles match reference model")
+
+
