@@ -262,3 +262,27 @@ async def test_clkdiv_period_jitter(dut):
     dut._log.info("✓ Toggle spacing consistent")
 
 
+@cocotb.test()
+async def test_clkdiv_reset_accumulator(dut):
+    # Reset in the middle of a run and make sure it picks up cleanly after.
+    dut._log.info("Reset at various states")
+
+    b, c = 60, 200  # c = -56, so b has to be at least 56
+    await start_clkdiv(dut, b, c)
+
+    # 256 cycles hits every accumulator value
+    await check_against_ref(dut, ClkdivRef(b, c), 256, label=" before reset")
+
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 1)
+    await ReadOnly()
+    assert dut.q.value == 0, "Not 0 during reset"
+
+    await RisingEdge(dut.clk)  # can't write inside ReadOnly
+    dut.rst_n.value = 1
+
+    # The next edge is the first real one after reset
+    await check_against_ref(dut, ClkdivRef(b, c), 500, label=" after reset")
+    dut._log.info("✓ Reset behavior OK")
+
+
