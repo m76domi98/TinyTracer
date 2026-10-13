@@ -150,3 +150,21 @@ async def test_clkdiv_frequency_230400(dut):
     dut._log.info("✓ Frequency within tolerance")
 
 
+@cocotb.test()
+async def test_clkdiv_parameter_change(dut):
+    # Run with one setting, switch b and c mid-run, and keep checking.
+    dut._log.info("Parameter switching")
+
+    await start_clkdiv(dut, B_115200, C_115200)
+    ref = ClkdivRef(B_115200, C_115200)
+    await check_against_ref(dut, ref, 1000)
+    dut._log.info("✓ First 1000 cycles verified with (104, -18)")
+
+    # No reset this time, so the accumulator carries over
+    dut.b.value = B_230400
+    dut.c.value = C_230400
+    ref.set_params(B_230400, C_230400)
+    await check_against_ref(dut, ref, 1000, label=" after parameter change")
+    dut._log.info("✓ Second 1000 cycles verified with (43, -18)")
+
+
