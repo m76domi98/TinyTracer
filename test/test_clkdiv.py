@@ -194,3 +194,13 @@ async def test_clkdiv_slowest_legal(dut):
     dut._log.info("✓ Slowest legal setting verified")
 
 
+@cocotb.test()
+async def test_clkdiv_largest_negative_c(dut):
+    # b=63, c=-63 is the biggest |c| we allow (b = -c).
+    dut._log.info("Largest negative c: b=63, c=-63")
+
+    await start_clkdiv(dut, 63, -63 & 0xFF)
+    await check_against_ref(dut, ClkdivRef(63, -63 & 0xFF), 2000)
+    dut._log.info("✓ Largest negative c verified")
+
+
