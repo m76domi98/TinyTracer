@@ -204,3 +204,26 @@ async def test_clkdiv_largest_negative_c(dut):
     dut._log.info("✓ Largest negative c verified")
 
 
+@cocotb.test()
+async def test_clkdiv_duty_cycle(dut):
+    # Output should spend about half its time high.
+    dut._log.info("Duty cycle check")
+
+    await start_clkdiv(dut, B_115200, C_115200)
+
+    cycles_high = 0
+    cycles_low = 0
+    for _ in range(10000):
+        if int(dut.q.value):
+            cycles_high += 1
+        else:
+            cycles_low += 1
+        await ClockCycles(dut.clk, 1)
+
+    duty_cycle = cycles_high / (cycles_high + cycles_low)
+    dut._log.info(f"Duty cycle: {duty_cycle:.3f}")
+
+    assert 0.40 < duty_cycle < 0.60, f"Duty cycle {duty_cycle} outside range"
+    dut._log.info("✓ Duty cycle OK")
+
+
