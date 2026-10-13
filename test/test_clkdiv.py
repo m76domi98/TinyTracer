@@ -227,3 +227,38 @@ async def test_clkdiv_duty_cycle(dut):
     dut._log.info("✓ Duty cycle OK")
 
 
+@cocotb.test()
+async def test_clkdiv_period_jitter(dut):
+    # Toggles can't be perfectly even, since the divider works in whole cycles.
+    # But the gaps should never differ by more than one cycle.
+    dut._log.info("Toggle spacing check")
+
+    await start_clkdiv(dut, B_230400, C_230400)
+
+    gaps = []
+    prev_q = int(dut.q.value)
+    cycles_since_toggle = None  # None until the first toggle, so we skip the partial gap
+    for _ in range(5000):
+        curr_q = int(dut.q.value)
+        if cycles_since_toggle is not None:
+            cycles_since_toggle += 1
+        if curr_q != prev_q:
+            if cycles_since_toggle is not None:
+                gaps.append(cycles_since_toggle)
+            cycles_since_toggle = 0
+        prev_q = curr_q
+        await ClockCycles(dut.clk, 1)
+
+    assert len(gaps) > 10, f"Only {len(gaps)} toggle gaps measured"
+
+    # Gaps should be the floor or ceiling of the average, so the spread is at
+    # most 1. Anything bigger is a real bug.
+    avg_gap = sum(gaps) / len(gaps)
+    spread = max(gaps) - min(gaps)
+
+    dut._log.info(f"Avg gap: {avg_gap:.2f}, min: {min(gaps)}, max: {max(gaps)}")
+
+    assert spread <= 1, f"Toggle gap spread {spread} cycles exceeds 1 cycle"
+    dut._log.info("✓ Toggle spacing consistent")
+
+
