@@ -101,3 +101,28 @@ async def test_clkdiv_basic_230400(dut):
     dut._log.info("✓ All 2000 cycles match reference model")
 
 
+@cocotb.test()
+async def test_clkdiv_frequency_115200(dut):
+    # Output should be about 1.844 MHz at 115,200 baud.
+    dut._log.info("Frequency check: 115,200 baud")
+
+    await start_clkdiv(dut, B_115200, C_115200)
+    await ClockCycles(dut.clk, 1)  # skip the first cycle after reset
+
+    measured_ratio = await measure_ratio(dut, 100_000)
+
+    # 1.844 MHz / 25 MHz = 0.07376
+    expected_ratio = 1.844e6 / 25e6
+    error_percent = abs(measured_ratio - expected_ratio) / expected_ratio * 100
+
+    dut._log.info(f"Measured frequency ratio: {measured_ratio:.6f}")
+    dut._log.info(f"Expected frequency ratio: {expected_ratio:.6f}")
+    dut._log.info(f"Error: {error_percent:.2f}%")
+
+    # 5% is plenty of room for finite sampling
+    assert error_percent < 5.0, (
+        f"Frequency error {error_percent:.2f}% exceeds 5% tolerance"
+    )
+    dut._log.info("✓ Frequency within tolerance")
+
+
