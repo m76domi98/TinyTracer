@@ -1,31 +1,25 @@
 # SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
 
-"""Reference model for clkdiv."""
+# Reference model for clkdiv.
+#
+# Each cycle we add b or c to the 8-bit accumulator, depending on its MSB.
+# q toggles on the edge where the MSB is already set, same as src/io/clkdiv.sv.
 
 
 class ClkdivRef:
-    """Simulates the fractional clock divider.
-
-    Accumulates b and c each cycle. When the accumulator MSB is set, we add b,
-    otherwise c. Output toggles whenever the MSB becomes set.
-    """
+    # b is positive, c is negative. Both are stored as unsigned 8-bit values
+    # (c = -18 is stored as 238).
 
     def __init__(self, b: int, c: int) -> None:
-        """Init with parameters.
-
-        Args:
-            b: Positive parameter (8-bit)
-            c: Negative parameter as unsigned 8-bit two's complement
-        """
         self.b = b & 0xFF
         self.c = c & 0xFF
         self.sr = 0  # 8-bit accumulator
-        self.q = 0   # Output
+        self.q = 0   # output
         self._validate_params()
 
     def _validate_params(self) -> None:
-        """Sanity check the parameters."""
+        # The divider only works for these ranges, so catch bad settings early.
         c_signed = self.c if self.c < 128 else self.c - 256
         b_signed = self.b if self.b < 128 else self.b - 256
 
@@ -34,16 +28,24 @@ class ClkdivRef:
         assert b_signed >= -c_signed, f"b ({b_signed}) must be >= -c ({-c_signed})"
         assert (b_signed - c_signed) <= 127, f"b - c must be <= 127, got {b_signed - c_signed}"
 
+    def set_params(self, b: int, c: int) -> None:
+        # Change b and c but keep the accumulator and output, like the RTL does
+        # when the inputs change mid-run.
+        self.b = b & 0xFF
+        self.c = c & 0xFF
+        self._validate_params()
+
     def tick(self) -> int:
-        """Run one cycle. Return the output."""
-        d = self.b if (self.sr & 0x80) else self.c
+        # One clock cycle. Returns the output after the cycle.
+        msb_was_set = self.sr & 0x80
+        d = self.b if msb_was_set else self.c
         self.sr = (self.sr + d) & 0xFF
-        if self.sr & 0x80:
+        if msb_was_set:
             self.q ^= 1
         return self.q
 
     def measure_frequency(self, cycles: int) -> float:
-        """Count toggles over N cycles, return frequency ratio."""
+        # Count toggles over N cycles and return the frequency ratio.
         toggles = 0
         for _ in range(cycles):
             prev_q = self.q
