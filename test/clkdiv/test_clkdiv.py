@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Cocotb tests for the clock divider (src/io/clkdiv.sv).
-# Run with `make -f Makefile.clkdiv`. clkdiv is the toplevel here, so we drive
+# Run with `make` in this folder. clkdiv is the toplevel here, so we drive
 # b, c, q, clk and rst_n directly.
 
 import cocotb
