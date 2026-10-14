@@ -13,3 +13,6 @@ site/
 tt/
 sim/tinytracer_sim
 sim/*.bmp
+test/clkdiv/sim_build
+test/clkdiv/__pycache__/
+test/clkdiv/results.xml
